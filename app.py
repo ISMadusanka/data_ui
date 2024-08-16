@@ -43,7 +43,6 @@ async def pandas(q: Q):
     await pandasPage(q)
     
 
-
 @on('#home')
 async def home(q: Q):
     await homePage(q)

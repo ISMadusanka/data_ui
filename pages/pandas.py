@@ -34,7 +34,7 @@ async def handle_pandas_upload(q: Q):
         os.remove(local_path)
 
         # Display the uploaded DataFrame and options for operations
-        q.page['result'] = ui.form_card(
+        add_card(q, 'result', ui.form_card(
             box=ui.box('grid', width='400px'),
             items=[
                 ui.text(f'DataFrame uploaded with {len(df)} rows and {len(df.columns)} columns.'),
@@ -47,7 +47,8 @@ async def handle_pandas_upload(q: Q):
                 ]),
                 ui.button(name='apply_operation', label='Apply Operation', primary=True),
             ]
-        )
+        ))
+        
         await q.page.save()
 
 #display the uploaded DataFrame
@@ -60,13 +61,14 @@ async def display_dataframe(q: Q, df: pd.DataFrame):
     rows = [ui.table_row(name=str(i), cells=[str(x) for x in row]) for i, row in df.iterrows()]
 
     # Show the DataFrame as a table
-    q.page['data'] = ui.form_card(
+    add_card(q, 'data', ui.form_card(
         box=ui.box('grid', width='400px'),
         items=[
             ui.table(name='data_table', columns=columns, rows=rows, downloadable=True),
             ui.button(name='restart', label='Upload Another File', primary=True),
         ]
-    )
+    ))
+   
     await q.page.save()
 
 
@@ -77,42 +79,46 @@ async def handle_pandas_operation(q: Q):
     if q.args.apply_operation:
         q.client.operation = q.args.operation
         if q.client.operation == 'head':
-            q.page['operation'] = ui.form_card(
+            add_card(q, 'operation', ui.form_card(
                 box=ui.box('grid', width='400px'),
                 items=[
                     ui.textbox(name='n', label='Number of Rows to Display', value='5'),
                     ui.button(name='perform_head', label='Show Rows', primary=True),
                 ]
-            )
+            ))
+            
         elif q.client.operation == 'describe':
             df_describe = q.client.df.describe().reset_index()
             await display_dataframe(q, df_describe)
         elif q.client.operation == 'sort':
-            q.page['operation'] = ui.form_card(
+            add_card(q, 'operation', ui.form_card(
                 box=ui.box('grid', width='400px'),
                 items=[
                     ui.dropdown(name='sort_column', label='Select Column to Sort By', choices=[ui.choice(name=col, label=col) for col in q.client.df.columns]),
                     ui.toggle(name='ascending', label='Ascending', value=True),
                     ui.button(name='perform_sort', label='Sort', primary=True),
                 ]
-            )
+            ))
+            
         elif q.client.operation == 'filter':
-            q.page['operation'] = ui.form_card(
+            add_card(q, 'operation', ui.form_card(
                 box=ui.box('grid', width='400px'),
                 items=[
                     ui.dropdown(name='filter_column', label='Select Column to Filter By', choices=[ui.choice(name=col, label=col) for col in q.client.df.columns]),
                     ui.textbox(name='filter_value', label='Filter Value'),
                     ui.button(name='perform_filter', label='Filter', primary=True),
                 ]
-            )
+            ))
+             
         elif q.client.operation == 'groupby':
-            q.page['operation'] = ui.form_card(
+            add_card(q, 'operation', ui.form_card(
                 box=ui.box('grid', width='400px'),
                 items=[
                     ui.dropdown(name='group_column', label='Select Column to Group By', choices=[ui.choice(name=col, label=col) for col in q.client.df.columns]),
                     ui.button(name='perform_groupby', label='Group By', primary=True),
                 ]
-            )
+            ))
+            
         await q.page.save()
 
 
