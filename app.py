@@ -5,7 +5,11 @@ from layouts.main_layout import main_layout
 from utils.ui import add_card, clear_cards
 from pages.home import homePage
 from pages.pandas import pandasPage
-from pages.pandas import handle_upload
+from pages.opencv import opencvPage
+from pages.opencv import handle_image_upload
+from pages.pandas import handle_pandas_upload
+from pages.pandas import handle_pandas_operation
+from pages.pandas import perform_pandas_operations
 
 
 @on('#page1')
@@ -27,6 +31,12 @@ async def page1(q: Q):
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum ac sodales felis. Duis orci enim, iaculis at augue vel, mattis imperdiet ligula. Sed a placerat lacus, vitae viverra ante...
         '''
     ))
+
+
+@on('#opencv')
+async def opencv(q: Q):
+    await opencvPage(q)
+
 
 @on('#pandas')
 async def pandas(q: Q):
@@ -59,9 +69,20 @@ async def serve(q: Q):
         q.client.cards = set()
         await init(q)
         q.client.initialized = True
-        
+    
+    if q.args.image_file:
+        await handle_image_upload(q)
+
     if q.args.csv_file:
-        await handle_upload(q)
+        await handle_pandas_upload(q)
+    
+    #pandas operations
+    if q.args.apply_operation:
+        await handle_pandas_operation(q)
+    
+    if await perform_pandas_operations(q):
+        pass
+    
     else:
         await run_on(q)
         

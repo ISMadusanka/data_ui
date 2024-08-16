@@ -13,7 +13,7 @@ header = ui.header_card(
             items=[
                 ui.tab(name='#home', label='Home'),
                 ui.tab(name='#pandas', label='Pandas'),
-                ui.tab(name='#page3', label='Grid'),
+                ui.tab(name='#opencv', label='OpenCV'),
                 ui.tab(name='#page4', label='Form'),
             ]
         ),
