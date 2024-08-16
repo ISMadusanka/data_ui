@@ -62,7 +62,7 @@ async def display_dataframe(q: Q, df: pd.DataFrame):
 
     # Show the DataFrame as a table
     add_card(q, 'data', ui.form_card(
-        box=ui.box('grid', width='400px'),
+        box=ui.box('sec_horizontal'),
         items=[
             ui.table(name='data_table', columns=columns, rows=rows, downloadable=True),
             ui.button(name='restart', label='Upload Another File', primary=True),

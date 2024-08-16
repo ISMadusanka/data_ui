@@ -8,7 +8,9 @@ main_layout = ui.meta_card(box='', layouts=[ui.layout(
             ui.zone('content', zones=[
                 ui.zone('horizontal', direction=ui.ZoneDirection.ROW),
                 ui.zone('vertical'),
-                ui.zone('grid', direction=ui.ZoneDirection.ROW, wrap='stretch', justify='center')
+                ui.zone('grid', direction=ui.ZoneDirection.ROW, wrap='stretch', justify='center'),
+                ui.zone('sec_horizontal', direction=ui.ZoneDirection.ROW),
+
             ]),
         ]
     )])
