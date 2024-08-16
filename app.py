@@ -53,7 +53,8 @@ async def init(q: Q) -> None:
     q.page['meta'] = main_layout
 
     #header component
-    q.page['header'] = header
+    hdr = header(q)
+    q.page['header'] = hdr
     if q.args['#'] is None:
         await homePage(q)
 
