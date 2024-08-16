@@ -19,11 +19,11 @@ header = ui.header_card(
         ),
     ],
     items=[
-        ui.persona(
-            title='John Doe',
-            subtitle='Developer',
-            size='xs',
-            image='https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&h=750&w=1260'
-        ),
+        # ui.persona(
+        #     title='John Doe',
+        #     subtitle='Developer',
+        #     size='xs',
+        #     image='https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&h=750&w=1260'
+        # ),
     ]
 )
