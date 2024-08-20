@@ -6,10 +6,14 @@ from utils.ui import add_card, clear_cards
 from pages.home import homePage
 from pages.pandas import pandasPage
 from pages.opencv import opencvPage
+from pages.pyplot import pyplotPage
 from pages.opencv import handle_image_upload
 from pages.pandas import handle_pandas_upload
 from pages.pandas import handle_pandas_operation
 from pages.pandas import perform_pandas_operations
+from pages.pyplot import select_columns_for_pyplot
+from pages.pyplot import handle_plot
+from pages.pyplot import handle_pyplot_upload
 
 
 @on('#page1')
@@ -31,6 +35,10 @@ async def page1(q: Q):
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum ac sodales felis. Duis orci enim, iaculis at augue vel, mattis imperdiet ligula. Sed a placerat lacus, vitae viverra ante...
         '''
     ))
+
+@on('#pyplot')
+async def pyplot(q: Q):
+    await pyplotPage(q)
 
 
 @on('#opencv')
@@ -75,7 +83,12 @@ async def serve(q: Q):
 
     if q.args.csv_file:
         await handle_pandas_upload(q)
-    
+    if q.args.csv_file_pyplot:
+        await handle_pyplot_upload(q)
+    if q.args.plot_type:
+        await select_columns_for_pyplot(q)
+    if q.args.column_selection:
+        await handle_plot(q)
     #pandas operations
     if q.args.apply_operation:
         await handle_pandas_operation(q)

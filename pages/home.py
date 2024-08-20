@@ -20,6 +20,12 @@ menu_items = [
         'title': 'NumPy',
         'caption': 'NumPy for numerical computing',
         'icon': 'Data'
+    },
+    {
+        'name': '',
+        'title': 'PyPlot',
+        'caption': 'PyPlot for data visualization',
+        'icon': 'Data'
     }
 ]
 

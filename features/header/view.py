@@ -51,7 +51,7 @@ def header(q: Q):
                     ui.tab(name='#home', label='Home'),
                     ui.tab(name='#pandas', label='Pandas'),
                     ui.tab(name='#opencv', label='OpenCV'),
-                    ui.tab(name='#page4', label='Form'),
+                    ui.tab(name='#pyplot', label='PyPlot'),
                 ]
             ),
         ],

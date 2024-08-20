@@ -5,38 +5,29 @@ from h2o_wave import main, app, Q, ui, data
 import numpy as np
 import base64
 import matplotlib.pyplot as plt
+from utils.ui import add_card, clear_cards
 
-@app('/')
-async def serve(q: Q):
-    if not q.client.initialized:
-        await render_upload_form(q)
-        q.client.initialized = True
-    elif q.args.csv_file:
-        await handle_file_upload(q)
-    elif q.args.plot_type:
-        await select_columns_for_pyplot(q)
-    elif q.args.column_selection:
-        await handle_plot(q)
-    elif q.args.restart:
-        q.client.initialized = False
-        await render_upload_form(q)
-    await q.page.save()
 
-async def render_upload_form(q: Q):
-    q.page['upload'] = ui.form_card(
-        box='1 1 4 4',
+
+async def pyplotPage(q: Q):
+    clear_cards(q)
+
+    add_card(q, 'upload', ui.form_card(
+        box=ui.box('grid', width='400px'),
         items=[
-            ui.file_upload(name='csv_file', label='Upload a CSV file', multiple=False),
-            ui.text_l("Please upload a CSV file to proceed."),
+            ui.file_upload(name='csv_file_pyplot', label='Upload a CSV file', multiple=False),
         ]
-    )
+    ))
+
     await q.page.save()
 
-async def handle_file_upload(q: Q):
+
+
+async def handle_pyplot_upload(q: Q):
     upload_dir = 'uploads'
     os.makedirs(upload_dir, exist_ok=True)
 
-    file_path = q.args.csv_file[0]
+    file_path = q.args.csv_file_pyplot[0]
     local_path = await q.site.download(file_path, upload_dir)
 
     with open(local_path, 'r', encoding='utf-8') as f:
@@ -48,8 +39,8 @@ async def handle_file_upload(q: Q):
 
     os.remove(local_path)
 
-    q.page['result'] = ui.form_card(
-        box='1 3 4 4',
+    add_card(q, 'result', ui.form_card(
+        box=ui.box('grid', width='400px'),
         items=[
             ui.text(f'DataFrame uploaded with {len(df)} rows and {len(df.columns)} columns.'),
             ui.dropdown(name='plot_type', label='Select Plot Type', choices=[
@@ -81,86 +72,31 @@ async def handle_file_upload(q: Q):
             ui.button(name='plot', label='Next', primary=True),
         ]
     )
+)
+    
+
+
     await q.page.save()
 
-async def select_columns_for_pyplot(q: Q):
-    df = q.client.df
-    plot_type = q.args.plot_type
-    q.client.plot_type = plot_type
-
-    if plot_type in ['line', 'scatter', 'bar', 'barh']:
-        q.page['select_columns_for_pyplot'] = ui.form_card(
-            box='1 5 4 4',
-            items=[
-                ui.dropdown(name='column_x', label='Select X-axis column', choices=[ui.choice(name=col, label=col) for col in df.columns]),
-                ui.dropdown(name='column_y', label='Select Y-axis column', choices=[ui.choice(name=col, label=col) for col in df.columns]),
-                ui.button(name='column_selection', label='Generate Plot', primary=True),
-            ]
-        )
-    elif plot_type in ['hist', 'boxplot']:
-        numeric_columns = df.select_dtypes(include='number').columns.tolist()
-        q.page['select_columns_for_pyplot'] = ui.form_card(
-            box='1 5 4 4',
-            items=[
-                ui.dropdown(name='column_x', label=f'Select Column for {plot_type.title()}', choices=[ui.choice(name=col, label=col) for col in numeric_columns]),
-                ui.button(name='column_selection', label='Generate Plot', primary=True),
-            ]
-        )
-    elif plot_type == 'pie':
-        q.page['select_columns_for_pyplot'] = ui.form_card(
-            box='1 5 4 4',
-            items=[
-                ui.dropdown(name='column_x', label='Select Label column', choices=[ui.choice(name=col, label=col) for col in df.columns]),
-                ui.dropdown(name='column_y', label='Select Value column', choices=[ui.choice(name=col, label=col) for col in df.columns]),
-                ui.button(name='column_selection', label='Generate Plot', primary=True),
-            ]
-        )
-    else:
-        await handle_plot(q)  # For other plots that don't need column selection
-    await q.page.save()
-
-async def handle_plot(q: Q):
-    df = q.client.df
-    plot_type = q.client.plot_type
-    col_x = q.args.column_x
-    col_y = q.args.column_y if hasattr(q.args, 'column_y') else None
-
-    if plot_type == 'line':
-        await render_line_plot(q, df, col_x, col_y)
-    elif plot_type == 'scatter':
-        await render_scatter_plot(q, df, col_x, col_y)
-    elif plot_type == 'bar':
-        await render_bar_plot(q, df, col_x, col_y, vertical=True)
-    elif plot_type == 'barh':
-        await render_bar_plot(q, df, col_x, col_y, vertical=False)
-    elif plot_type == 'hist':
-        await render_histogram(q, df[col_x])
-    elif plot_type == 'pie':
-        await render_pie_chart(q, df, col_x, col_y)
-    elif plot_type == 'boxplot':
-        await render_box_plot(q, df[col_x])
-    else:
-        await render_special_plot(q, df, plot_type)
-    await q.page.save()
 
 # Line Plot
 async def render_line_plot(q: Q, df: pd.DataFrame, col_x: str, col_y: str):
-    q.page['plot'] = ui.plot_card(
-        box='1 5 4 4',
+    add_card(q, 'plot',ui.plot_card(
+        box=ui.box('sec_horizontal'),
         title='Line Plot',
         data=data('x y', len(df), rows=[(x, y) for x, y in zip(df[col_x], df[col_y])]),
         plot=ui.plot([ui.mark(type='line', x='=x', y='=y')])
-    )
+    ))
     await q.page.save()
 
 # Scatter Plot
 async def render_scatter_plot(q: Q, df: pd.DataFrame, col_x: str, col_y: str):
-    q.page['plot'] = ui.plot_card(
-        box='1 5 4 4',
+    add_card(q, 'plot',ui.plot_card(
+        box=ui.box('sec_horizontal'),
         title='Scatter Plot',
         data=data('x y', len(df), rows=[(x, y) for x, y in zip(df[col_x], df[col_y])]),
         plot=ui.plot([ui.mark(type='point', x='=x', y='=y')])
-    )
+    ))
     await q.page.save()
 
 # Bar Plot
@@ -168,36 +104,35 @@ async def render_bar_plot(q: Q, df: pd.DataFrame, col_x: str, col_y: str, vertic
     x = '=x' if vertical else '=y'
     y = '=y' if vertical else '=x'
     title = 'Bar Plot' if vertical else 'Horizontal Bar Plot'
-    
-    q.page['plot'] = ui.plot_card(
-        box='1 5 4 4',
+    add_card(q, 'plot',ui.plot_card(
+        box=ui.box('sec_horizontal'),
         title=title,
         data=data('x y', len(df), rows=[(x_val, y_val) for x_val, y_val in zip(df[col_x], df[col_y])]),
         plot=ui.plot([ui.mark(type='interval', x=x, y=y)])
-    )
+    ))
     await q.page.save()
 
 # Pie Chart
 async def render_pie_chart(q: Q, df: pd.DataFrame, col_label: str, col_value: str):
     pie_data = [(str(label), float(value)) for label, value in zip(df[col_label], df[col_value])]
-    q.page['plot'] = ui.plot_card(
-        box='1 5 4 4',
+    add_card(q, 'plot', ui.plot_card(
+        box=ui.box('sec_horizontal'),
         title='Pie Chart',
         data=data('label value', len(pie_data), rows=pie_data),
         plot=ui.plot([ui.mark(type='arc', x='=value', color='=label')])
-    )
+    ))
     await q.page.save()
 
 # Histogram
 async def render_histogram(q: Q, series: pd.Series):
     hist_data, bin_edges = np.histogram(series.dropna(), bins=10)
     bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
-    q.page['plot'] = ui.plot_card(
-        box='1 5 4 4',
+    add_card(q, 'plot', ui.text_card(
+        box=ui.box('sec_horizontal'),
         title='Histogram',
         data=data('x y', len(bin_centers), rows=[(x, y) for x, y in zip(bin_centers, hist_data)]),
         plot=ui.plot([ui.mark(type='interval', x='=x', y='=y')])
-    )
+    ))
     await q.page.save()
 
 # Box Plot
@@ -206,12 +141,12 @@ async def render_box_plot(q: Q, series: pd.Series):
     ax.boxplot(series.dropna())
     ax.set_title('Box Plot')
     fig_path = save_figure_as_base64(fig)
-    q.page['plot'] = ui.image_card(
-        box='1 5 4 4',
+    add_card(q, 'plot',  ui.image_card(
+        box=ui.box('sec_horizontal'),
         title='Box Plot',
         type='png',
         image=fig_path
-    )
+    ))
     await q.page.save()
 
 # Function to save Matplotlib figure as a base64 string
@@ -292,10 +227,75 @@ async def render_special_plot(q: Q, df: pd.DataFrame, plot_type: str):
         ax.set_title('Logarithmic Plot (both axes)')
 
     fig_path = save_figure_as_base64(fig)
-    q.page['plot'] = ui.image_card(
-        box='1 5 4 4',
+    add_card(q, 'plot',  ui.image_card(
+        box=ui.box('sec_horizontal'),
         title=plot_type.title(),
         type='png',
         image=fig_path
-    )
+    ))
     await q.page.save()
+
+
+
+async def handle_plot(q: Q):
+    df = q.client.df
+    plot_type = q.client.plot_type
+    col_x = q.args.column_x
+    col_y = q.args.column_y if hasattr(q.args, 'column_y') else None
+
+    if plot_type == 'line':
+        await render_line_plot(q, df, col_x, col_y)
+    elif plot_type == 'scatter':
+        await render_scatter_plot(q, df, col_x, col_y)
+    elif plot_type == 'bar':
+        await render_bar_plot(q, df, col_x, col_y, vertical=True)
+    elif plot_type == 'barh':
+        await render_bar_plot(q, df, col_x, col_y, vertical=False)
+    elif plot_type == 'hist':
+        await render_histogram(q, df[col_x])
+    elif plot_type == 'pie':
+        await render_pie_chart(q, df, col_x, col_y)
+    elif plot_type == 'boxplot':
+        await render_box_plot(q, df[col_x])
+    else:
+        await render_special_plot(q, df, plot_type)
+    await q.page.save()
+
+async def select_columns_for_pyplot(q: Q):
+    df = q.client.df
+    plot_type = q.args.plot_type
+    q.client.plot_type = plot_type
+
+    if plot_type in ['line', 'scatter', 'bar', 'barh']:
+        add_card(q, 'select_columns_for_pyplot', ui.form_card(
+            box=ui.box('grid', width='400px'),
+            items=[
+                ui.dropdown(name='column_x', label='Select X-axis column', choices=[ui.choice(name=col, label=col) for col in df.columns]),
+                ui.dropdown(name='column_y', label='Select Y-axis column', choices=[ui.choice(name=col, label=col) for col in df.columns]),
+                ui.button(name='column_selection', label='Generate Plot', primary=True),
+            ]
+        ))
+    elif plot_type in ['hist', 'boxplot']:
+        numeric_columns = df.select_dtypes(include='number').columns.tolist()
+        add_card(q, 'select_columns_for_pyplot', ui.form_card(
+            box=ui.box('grid', width='400px'),
+            items=[
+                ui.dropdown(name='column_x', label=f'Select Column for {plot_type.title()}', choices=[ui.choice(name=col, label=col) for col in numeric_columns]),
+                ui.button(name='column_selection', label='Generate Plot', primary=True),
+            ]
+        ))
+    elif plot_type == 'pie':
+        add_card(q, 'select_columns_for_pyplot', ui.form_card(
+            box=ui.box('grid', width='400px'),
+            items=[
+                ui.dropdown(name='column_x', label='Select Label column', choices=[ui.choice(name=col, label=col) for col in df.columns]),
+                ui.dropdown(name='column_y', label='Select Value column', choices=[ui.choice(name=col, label=col) for col in df.columns]),
+                ui.button(name='column_selection', label='Generate Plot', primary=True),
+            ]
+        ))
+       
+    else:
+        await handle_plot(q)  # For other plots that don't need column selection
+    await q.page.save()
+
+
