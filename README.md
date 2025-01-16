@@ -1,4 +1,4 @@
-# Getting Started with H2O Wave
+# Getting Started with Data UI
 
 This project was bootstrapped with `wave init` command.
 
